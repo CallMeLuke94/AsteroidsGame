@@ -1,7 +1,7 @@
 class Spaceship {
   float x;
   float y;
-  float a;
+  float angle;
   PVector pos;
   PVector vel;
   PVector acc;
@@ -9,7 +9,7 @@ class Spaceship {
   float lazX;
   float lazY;
 
-  boolean l;
+  boolean lazerOn;
   boolean live;
 
   float mass = 5;
@@ -24,11 +24,11 @@ class Spaceship {
     y = y_;
     pos = new PVector(x, y);
 
-    a = 0;
+    angle = 0;
     vel = new PVector(0, 0);
     acc = new PVector(0, 0);
 
-    l = false;
+    lazerOn = false;
     live = true;
   }
 
@@ -42,7 +42,7 @@ class Spaceship {
 
       pushMatrix();
       translate(pos.x, pos.y);
-      rotate(a);
+      rotate(angle);
       laser(100);
       model(0.5);
       lazX = modelX(200, 0, 0);
@@ -60,7 +60,7 @@ class Spaceship {
   void thrust(float s) {
     if (keyPressed) {
       if (key == 'z') {
-        PVector dir = PVector.fromAngle(a);
+        PVector dir = PVector.fromAngle(angle);
         dir.mult(s);
         applyForce(dir);
       }
@@ -96,17 +96,17 @@ class Spaceship {
         stroke(255, 0, 0);
         line(0, 0, len, 0);
         strokeWeight(1);
-        l = true;
+        lazerOn = true;
       }
     }
   }
 
   void turnToMouse(float l) {
-    a = PVector.sub(new PVector(mouseX, mouseY), pos).heading();
+    angle = PVector.sub(new PVector(mouseX, mouseY), pos).heading();
     if (mousePressed) {
       pushMatrix();
       translate(pos.x, pos.y);
-      rotate(a);
+      rotate(angle);
       strokeWeight(3);
       stroke(255, 0, 0);
       line(0, 0, l, 0);
@@ -119,9 +119,9 @@ class Spaceship {
     if (keyPressed) {
       if (key == CODED) {
         if (keyCode == LEFT) {
-          a -= 000.1;
+          angle -= 000.1;
         } else if (keyCode == RIGHT) {
-          a += 000.1;
+          angle += 000.1;
         }
       }
     }

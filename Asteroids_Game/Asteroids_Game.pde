@@ -1,19 +1,25 @@
+import java.util.*;
+
 boolean started = false;
 
-int total = 10;
+ArrayList<Integer> gameTimes = new ArrayList<Integer>();
+
+int total = 8;
 
 Spaceship s;
-float p = 1;
+float power = 1;
 
 Asteroid[] rocks = new Asteroid[total];
 
 int lives, score;
-long startTime, endTime;
+long startTime, endTime; 
+int thisTime;
 boolean time = true;
 PFont f, g;
 
 void setup() {
   s = new Spaceship(width/2, 3*height/4);
+  s.angle = -HALF_PI;
 
   f = createFont("SourceCodePro-Regular", 22);
   g = createFont("SourceCodePro-Regular", 32);
@@ -26,28 +32,21 @@ void setup() {
 
 void draw() {
   background(0);
+
+  s.edges();
+  s.update();
+  s.spin();
+  s.thrust(power);
+  s.drag();
+  s.display();
+
   if (!started) {
-    s.edges();
-    s.update();
-    s.spin();
-    s.thrust(p);
-    //s.drive(p);
-    s.drag();
-    s.display();
     gameStart();
   } else {
-    //s.turnToMouse(100);
-
-    s.edges();
-    s.update();
-    s.spin();
-    s.thrust(p);
-    //s.drive(p);
-    s.drag();
-    s.display();
 
     for (int i = 0; i < rocks.length; i++) {
       rocks[i].edges();
+      rocks[i].wobble();
       rocks[i].update();
       rocks[i].display();
       rocks[i].collide(s);
@@ -64,9 +63,28 @@ void draw() {
     textAlign(RIGHT);
     text("Lives: " + lives, width-20, 30);
 
-    gameEnd();
+    if (score == rocks.length) {
+      if (time) {
+        endTime = System.nanoTime();
+        time = false;
+        thisTime = floor((endTime - startTime) / 1E9);
+        gameTimes.add(thisTime);
+      }
+      gameWon();
+    }
 
-    s.l = false;
+    if (lives == 0) {
+      if (time) {
+        endTime = System.nanoTime();
+        time = false;
+        thisTime = floor((endTime - startTime) / 1E9);
+      }
+      gameLost();
+      if (gameTimes.size() > 0) {
+        bestTime();
+      }
+    }
+    s.lazerOn = false;
   }
 }
 
@@ -79,8 +97,16 @@ void gameStart() {
   stroke(255);
   noFill();
   rect(width/2, height/2 - 10, 202, 56);
-  if (mouseX > width/2-75 && mouseX < width/2+75 && mouseY > height/2 - 28 && mouseY < height/2 + 28) {
-    fill(100);
+
+  if (keyPressed) {
+    if (key == ENTER || key == RETURN) {
+      started = true;
+      restartGame();
+    }
+  }
+
+  if (mouseX > width/2 - 102 && mouseX < width/2 + 102 && mouseY > height/2 - 10 - 29 && mouseY < height/2 - 10 + 29) {
+    fill(80);
     if (mousePressed) {
       started = true;
       restartGame();
@@ -88,56 +114,61 @@ void gameStart() {
   } else {
     fill(255);
   }
+
   textFont(g);
   text("Start Game", width/2, height/2);
   rectMode(CORNER);
 }
 
 
-void gameEnd() {
+void gameWon() {
   textFont(g);
-  if (score == rocks.length) {
-    if (time) {
-      endTime = System.nanoTime();
-      time = false;
-    }
-    fill(0, 255, 0);
-    textAlign(CENTER);
-    text("You Win!", width/2, height/2);
-    restartButton();
-    fill(255);
-    text("Time: " + (floor((endTime - startTime) / 1E9)) + "s", width/2, height/2+120);
-  } else if (lives == 0) {
-    if (time) {
-      endTime = System.nanoTime();
-      time = false;
-    }
-    fill(255, 0, 0);
-    textAlign(CENTER);
-    text("Game Over", width/2, height/2);
-    s.live = false;
-    restartButton();
-    fill(255);
-    text("Time: " + (floor((endTime - startTime) / 1E9)) + "s", width/2, height/2+120);
-  }
+  fill(0, 255, 0);
+  textAlign(CENTER);
+  text("Success!", width/2, height/2-65);
+  restartButton();
+
+  fill(255);
+  text("Time: " + thisTime + "s", width/2, height/2+55);
+  bestTime();
+}
+
+void gameLost() {  
+  fill(255, 0, 0);
+  textAlign(CENTER);
+  text("Game Over", width/2, height/2-65);
+  s.live = false;
+  restartButton();
+  
+  fill(255);
+  text("Time: " + thisTime + "s", width/2, height/2+55);
 }
 
 void restartButton() {
   rectMode(CENTER);
   stroke(255);
   noFill();
-  rect(width/2, height/2 + 46, 150, 56);
-  if (mouseX > width/2-75 && mouseX < width/2+75 && mouseY > height/2 + 46 - 28 && mouseY < height/2 + 46 + 28) {
-    fill(100);
+  rect(width/2, height/2 -19, 150, 56);
+
+  if (keyPressed) {
+    if (key == ENTER || key == RETURN) {
+      started = true;
+      restartGame();
+    }
+  }
+
+  if (mouseX > width/2 - 76 && mouseX < width/2 + 76 && mouseY > height/2 - 19 - 29 && mouseY < height/2 - 19 + 29) {
+    fill(80);
     if (mousePressed) {
       restartGame();
     }
   } else {
     fill(255);
   }
+
   textAlign(CENTER);
   textFont(g);
-  text("restart", width/2, height/2 + 55);
+  text("restart", width/2, height/2 - 10);
   rectMode(CORNER);
 }
 
@@ -149,11 +180,20 @@ void restartGame() {
 
   for (int i = 0; i < rocks.length; i++) {
     rocks[i] = new Asteroid(random(30, 80), new PVector(random(-width/3, width/3), random(height)), PVector.random2D().mult(random(0.5, 1.5)), int(random(10, 21)));
-    //rocks[i] = new Asteroid(random(30, 80), new PVector(random(width), random(height)), new PVector(0, 0), int(random(10, 21)));
+    //rocks[i] = new Asteroid(random(30, 80), new PVector(width/2 + 100, height/2 + 100), new PVector(0, 0), int(random(10, 21)));
     rocks[i].generate();
   }
 
   time = true;
   s.live = true;
   s.pos = new PVector(width/2, height/2);
+  s.vel = new PVector(0, 0);
+}
+
+void bestTime() {
+  Collections.sort(gameTimes);
+  fill(255);
+  textAlign(CENTER);
+  textFont(f);
+  text("Best time: " + gameTimes.get(0) + "s", width/2, height/2 + 95);
 }
