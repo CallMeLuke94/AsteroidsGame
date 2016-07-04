@@ -13,7 +13,7 @@ class Spaceship {
   boolean live;
 
   float mass = 5;
-  float air = 0.05;
+  float air = 0.03;
 
   int s = 40;
   int r = 15;

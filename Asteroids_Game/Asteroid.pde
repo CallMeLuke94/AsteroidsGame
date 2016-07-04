@@ -21,7 +21,7 @@ class Asteroid {
     pushMatrix();
     translate(pos.x, pos.y);
     beginShape();
-    for (int i = 1; i < c; i++) {
+    for (int i = 0; i < c; i++) {
       vertex(vertices[i].x, vertices[i].y);
     }
     endShape(CLOSE);
@@ -29,11 +29,11 @@ class Asteroid {
   }
 
   void generate() {
-    for (int i = 1; i < c; i++) {
+    for (int i = 0; i < c; i++) {
       float a = TWO_PI*i/c;
       PVector v = PVector.fromAngle(a);
       v.mult(random(0.8, 1.2)*r/2);
-      vertices[i] = v;
+      vertices[i] = v.copy();
     }
   }
 
@@ -75,6 +75,8 @@ class Asteroid {
         lazs[i] = lazs[i].mult(1-float(i)/10);
         lazs[i] = lazs[i].add(s.pos.copy());
         if (pos.dist(lazs[i]) < r/2) {
+          fill(0, 255, 0);
+          ellipse(pos.x, pos.y, r, r);
           destroy();
         }
       }
