@@ -75,8 +75,6 @@ class Asteroid {
         lazs[i] = lazs[i].mult(1-float(i)/10);
         lazs[i] = lazs[i].add(s.pos.copy());
         if (pos.dist(lazs[i]) < r/2) {
-          fill(0, 255, 0);
-          ellipse(pos.x, pos.y, r, r);
           destroy();
         }
       }
